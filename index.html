@@ -9,7 +9,7 @@
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
- :root {
+  :root {
     --cream: #fdffb6;       /* Nền vàng chanh pastel */
     --white: #FFFFFF;
     --ink: #1A1714;
@@ -30,20 +30,21 @@
     background: var(--white);
   }
   .step.active .step-num {
-    background: #a0c4ff;         /* Xanh dương khi active */
-    border-color: #a0c4ff;
-    color: white;
+    background: #a0c4ff !important;         /* Xanh dương khi active */
+    border-color: #a0c4ff !important;
+    color: white !important;
   }
   .step.done .step-num {
-    background: #e8f0fe;         /* Xanh dương siêu nhạt khi hoàn thành */
-    border-color: #a0c4ff;
-    color: #a0c4ff;
+    background: #e8f0fe !important;         /* Xanh dương siêu nhạt khi hoàn thành */
+    border-color: #a0c4ff !important;
+    color: #a0c4ff !important;
   }
   .step.active .step-label {
-    color: #a0c4ff;              /* Chữ bước active sang xanh dương */
+    color: #a0c4ff !important;              /* Chữ bước active sang xanh dương */
+    font-weight: 600;
   }
   .step-line {
-    background: #bdb2ff;         /* Đường nối màu tím xanh nhạt */
+    background: #bdb2ff !important;         /* Đường nối màu tím xanh nhạt */
   }
 
   html { background: var(--cream); }
@@ -130,20 +131,8 @@
   .step-line {
     flex: 1;
     height: 1px;
-    background: var(--ink-faint);
     margin: 0 8px;
     max-width: 40px;
-  }
-  .step.active .step-num {
-    background: var(--sage);
-    border-color: var(--sage);
-    color: white;
-  }
-  .step.active .step-label { color: var(--ink); font-weight: 500; }
-  .step.done .step-num {
-    background: var(--sage-light);
-    border-color: var(--sage);
-    color: var(--sage-dark);
   }
 
   /* Cards */
@@ -221,7 +210,7 @@
     border-color: var(--sage);
     background: var(--sage-light);
   }
-  .slot-btn.available:hover .slot-time { color: var(--sage-dark); }
+  .slot-btn.available:hover .slot-time { color: #cc445b; }
   .slot-btn.selected {
     border-color: var(--sage);
     background: var(--sage);
@@ -281,7 +270,7 @@
   }
   .slot-summary-icon { font-size: 18px; }
   .slot-summary-text { font-size: 13px; line-height: 1.4; }
-  .slot-summary-main { font-weight: 600; color: var(--sage-dark); }
+  .slot-summary-main { font-weight: 600; color: #cc445b; }
   .slot-summary-sub { color: var(--ink-soft); }
 
   /* Buttons */
@@ -403,7 +392,6 @@
 
 <div class="container">
 
-  <!-- Steps -->
   <div class="steps">
     <div class="step active" id="step1">
       <div class="step-num">1</div>
@@ -421,7 +409,6 @@
     </div>
   </div>
 
-  <!-- Screen 1: Pick date & slot -->
   <div class="screen active" id="screen-1">
     <div class="card">
       <div class="card-title">When are you visiting?</div>
@@ -440,7 +427,6 @@
     </button>
   </div>
 
-  <!-- Screen 2: Details form -->
   <div class="screen" id="screen-2">
     <div class="card">
       <div class="card-title">Your details</div>
@@ -487,7 +473,6 @@
     </button>
   </div>
 
-  <!-- Screen 3: Success -->
   <div class="screen" id="screen-3">
     <div class="success-card">
       <div class="success-icon">🎉</div>
@@ -595,7 +580,6 @@
     if (!selectedSlot) return;
     const d = new Date(selectedDate + 'T00:00:00');
     const dateStr = d.toLocaleDateString('en-AU', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
-    // Đã sửa đổi ký tự gạch ngang chuẩn ở dòng dưới đây
     document.getElementById('summary-main').textContent = `${selectedSlot.start} - ${selectedSlot.end}`;
     document.getElementById('summary-sub').textContent = dateStr;
     goToScreen(2);
@@ -629,7 +613,6 @@
     btn.innerHTML = '<div class="spinner"></div> Confirming...';
 
     try {
-      // Apps Script CORS fix: send as GET with URL params
       const params = new URLSearchParams({
         action: 'createBooking',
         date: selectedDate,
@@ -683,7 +666,6 @@
     document.getElementById('slots-container').innerHTML = '';
     document.getElementById('btn-next-1').disabled = true;
     
-    // Đã sửa đổi: Tải lại slot mới nhất từ dữ liệu Google Sheets thực tế
     dateInput.value = today;
     loadSlots(today);
     
