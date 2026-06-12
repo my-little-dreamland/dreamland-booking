@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Book a Session — My Little Dreamland</title>
+<link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;600;700&family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -26,22 +28,24 @@
   html { background: var(--cream); }
 
   body {
-    font-family: "Comic Sans MS", "Comic Sans", "Chalkboard SE", "Comic Neue", sans-serif; /* Tích hợp font chữ Comic Sans đáng yêu */
-    font-size: 15px;
+    font-family: 'Comfortaa', 'Fredoka', sans-serif; /* Áp dụng font bo tròn cao cấp */
+    font-size: 14px;
     color: var(--ink);
     background: var(--cream);
     min-height: 100vh;
     padding: 0 0 60px;
   }
 
-  /* Đổi toàn bộ font tiêu đề sang Comic Sans đồng bộ */
+  /* Đổi toàn bộ font tiêu đề sang dạng Font trẻ em mập lùn siêu cưng */
   .header-title, .card-title, .success-title {
-    font-family: "Comic Sans MS", "Comic Sans", "Chalkboard SE", sans-serif !important;
-    font-weight: bold;
+    font-family: 'Fredoka', sans-serif !important;
+    font-weight: 700;
+    letter-spacing: 0.5px;
   }
 
   /* Mix bộ số 1-2-3 và đường nối sang màu Xanh Dương Pastel */
   .step .step-num {
+    font-family: 'Fredoka', sans-serif !important;
     border: 1.5px solid #bdb2ff !important; /* Viền tím xanh nhạt */
     color: #a0c4ff !important;              /* Số màu xanh dương pastel */
     background: var(--white) !important;
@@ -90,7 +94,7 @@
     font-size: 18px;
   }
   .header-sub {
-    font-size: 12px;
+    font-size: 11px;
     color: var(--ink-soft);
     margin-top: 1px;
   }
@@ -128,7 +132,7 @@
     transition: all 0.2s;
   }
   .step-label {
-    font-size: 12px;
+    font-size: 11px;
     color: var(--ink-soft);
     transition: color 0.2s;
   }
@@ -148,7 +152,7 @@
     margin-bottom: 16px;
   }
   .card-sub {
-    font-size: 13px;
+    font-size: 12px;
     color: var(--ink-soft);
     margin-bottom: 20px;
     line-height: 1.5;
@@ -161,7 +165,7 @@
     border: 1.5px solid var(--ink-faint);
     border-radius: var(--radius-sm);
     font-family: inherit;
-    font-size: 15px;
+    font-size: 14px;
     color: var(--ink);
     background: var(--white);
     cursor: pointer;
@@ -185,4 +189,121 @@
   }
   .slot-btn {
     padding: 12px 8px;
-    border
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--ink-faint);
+    background: var(--white);
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+    font-family: inherit;
+  }
+  .slot-time {
+    font-size: 13px;
+    font-weight: bold;
+    color: var(--ink);
+    display: block;
+  }
+  .slot-avail {
+    font-size: 11px;
+    margin-top: 3px;
+    display: block;
+    color: var(--ink-soft);
+  }
+  
+  /* Màu hồng Pastel cho nút còn chỗ */
+  .slot-btn.available {
+    border-color: #ffadad !important;
+    background: #fff5f5 !important;
+  }
+  .slot-btn.available:hover {
+    background: var(--sage-light) !important;
+  }
+  .slot-btn.available:hover .slot-time { color: var(--sage-dark) !important; }
+  
+  /* Khi được bấm chọn thành Hồng Đậm nổi bật */
+  .slot-btn.selected {
+    border-color: var(--sage-dark) !important;
+    background: var(--sage) !important;
+  }
+  .slot-btn.selected .slot-time { color: white !important; }
+  .slot-btn.selected .slot-avail { color: rgba(255,255,255,0.9) !important; }
+  
+  .slot-btn.almost {
+    border-color: #ffd6a5 !important;
+    background: #fffdfa !important;
+  }
+  .slot-btn.almost .slot-avail { color: #d35400 !important; }
+  
+  .slot-btn.full {
+    border-color: var(--ink-faint) !important;
+    background: #F5F4F2 !important;
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+  .slot-btn.full .slot-time { color: var(--ink-soft) !important; }
+  .slot-btn.full .slot-avail { color: var(--ink-faint) !important; }
+  .slot-btn.past { display: none; }
+
+  /* Form fields */
+  .field { margin-bottom: 16px; }
+  .field label {
+    display: block;
+    font-size: 12px;
+    font-weight: bold;
+    color: var(--ink);
+    margin-bottom: 6px;
+  }
+  .field input, .field select {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1.5px solid var(--ink-faint);
+    border-radius: var(--radius-sm);
+    font-family: inherit;
+    font-size: 14px;
+    color: var(--ink);
+    background: var(--white);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .field input:focus, .field select:focus { border-color: var(--sage) !important; }
+  .field input::placeholder { color: var(--ink-faint); }
+
+  /* Selected slot summary */
+  .slot-summary {
+    background: var(--sage-light) !important;
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .slot-summary-icon { font-size: 18px; }
+  .slot-summary-text { font-size: 12px; line-height: 1.4; }
+  .slot-summary-main { font-weight: bold; color: var(--sage-dark) !important; }
+  .slot-summary-sub { color: var(--ink-soft); }
+
+  /* Buttons */
+  .btn {
+    width: 100%;
+    padding: 14px;
+    border-radius: var(--radius-sm);
+    border: none;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .btn-primary {
+    background: var(--sage) !important;
+    color: white !important;
+  }
+  .btn-primary:hover { background: var(--sage-dark) !important; }
+  .btn-primary:disabled {
+    background: var(--ink-faint) !important;
+    color:
