@@ -319,13 +319,39 @@
 </div>
 
 <script>
-  // Script giữ nguyên 100% của bạn
   const API_URL = "https://script.google.com/macros/s/AKfycbwd0Zs_ewx9LDmBT_WNpT4H07BODU4e7nrR0ZQJsJbLBnrwFaIrnLLDRrJ5uJl2p-MN7Q/exec";
   let selectedDate = null; let selectedSlot = null;
   const dateInput = document.getElementById('date-input');
+  
+  // SỬA 2: Logic tự động nhảy sang ngày hôm sau nếu >= 19:00 (chuẩn giờ Úc)
   const nowLoc = new Date();
-  const today = nowLoc.getFullYear() + '-' + String(nowLoc.getMonth() + 1).padStart(2, '0') + '-' + String(nowLoc.getDate()).padStart(2, '0');
-  dateInput.min = today; dateInput.value = today;
+  const melbStr = nowLoc.toLocaleString("en-US", {timeZone: "Australia/Melbourne"});
+  const melbDateObj = new Date(melbStr);
+  
+  let melbYear = melbDateObj.getFullYear();
+  let melbMonth = String(melbDateObj.getMonth() + 1).padStart(2, '0');
+  let melbDay = String(melbDateObj.getDate()).padStart(2, '0');
+  let todayStr = `${melbYear}-${melbMonth}-${melbDay}`;
+  
+  let defaultDate = todayStr;
+  let minDate = todayStr;
+
+  // Cài đặt điều kiện: Nếu giờ hiện tại ở Úc là từ 19h trở đi
+  if (melbDateObj.getHours() >= 19) {
+    // Cộng thêm 1 ngày
+    melbDateObj.setDate(melbDateObj.getDate() + 1);
+    let nextYear = melbDateObj.getFullYear();
+    let nextMonth = String(melbDateObj.getMonth() + 1).padStart(2, '0');
+    let nextDay = String(melbDateObj.getDate()).padStart(2, '0');
+    let tomorrowStr = `${nextYear}-${nextMonth}-${nextDay}`;
+    
+    // Đổi mặc định sang ngày mai
+    defaultDate = tomorrowStr;
+    minDate = tomorrowStr;
+  }
+
+  dateInput.min = minDate; 
+  dateInput.value = defaultDate;
 
   dateInput.addEventListener('change', () => {
     selectedSlot = null; document.getElementById('btn-next-1').disabled = true; loadSlots(dateInput.value);
@@ -413,9 +439,13 @@
     document.getElementById('f-name').value = ''; document.getElementById('f-email').value = '';
     document.getElementById('f-phone').value = ''; document.getElementById('f-children').value = '';
     document.getElementById('slots-container').innerHTML = ''; document.getElementById('btn-next-1').disabled = true;
-    dateInput.value = today; loadSlots(today); goToScreen(1);
+    
+    // SỬA 3: Khôi phục lại ngày đúng theo logic mới (ngày mai nếu quá 19:00)
+    dateInput.value = defaultDate; loadSlots(defaultDate); goToScreen(1);
   }
-  loadSlots(today);
+  
+  // SỬA 4: Load danh sách giờ dựa trên ngày đúng
+  loadSlots(defaultDate);
 </script>
 </body>
 </html>
