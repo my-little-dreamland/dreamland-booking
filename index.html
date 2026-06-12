@@ -1,329 +1,566 @@
-// ============================================================
-// MY LITTLE DREAMLAND — Booking API (Apps Script)
-// ============================================================
-// Deploy: Extensions > Apps Script > Deploy > New deployment
-//         Type: Web App | Execute as: Me | Access: Anyone
-// ============================================================
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Book a Session — My Little Dreamland</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-const CONFIG = {
-  SHEET_ID: "1lRXe8Tt02mNZ33u6wIaoWNbxOz2CtAlwTbeGIemVnFE", // ID Sheet của bạn
-  OPEN_TIME: "08:30",   // Giờ mở cửa
-  CLOSE_TIME: "20:00",  // Giờ đóng cửa (slot cuối kết thúc lúc này)
-  SLOT_DURATION: 60,    // Phút mỗi slot
-  MAX_CAPACITY: 40,     // Tối đa trẻ mỗi slot
-  SHEET_BOOKINGS: "Bookings",
-  SHEET_CAPACITY: "Capacity",
-};
-
-// ============================================================
-// ROUTING — GET / POST
-// ============================================================
-
-function doGet(e) {
-  const action = e.parameter.action || "getSlots";
-
-  if (action === "getSlots") {
-    const date = e.parameter.date;
-    if (!date) return jsonError("Thiếu tham số: date");
-    return jsonResponse(getSlotsForDate(date));
+  :root {
+    --cream: #FAF8F4;
+    --white: #FFFFFF;
+    --ink: #1A1714;
+    --ink-soft: #6B6560;
+    --ink-faint: #C8C3BC;
+    --sage: #ffadad;         /* Màu hồng dâu ngọt ngào cho nút bấm */
+    --sage-light: #fff5f5;   /* Hồng nhạt khi hover */
+    --sage-dark: #ff8fa3;    /* Hồng đậm hơn khi chọn hẳn */
+    --radius: 14px;
+    --radius-sm: 8px;
   }
 
-  if (action === "createBooking") {
-    const data = {
-      action: "createBooking",
-      date: e.parameter.date,
-      slot: e.parameter.slot,
-      parentName: e.parameter.parentName,
-      parentEmail: e.parameter.parentEmail,
-      parentPhone: e.parameter.parentPhone || "",
-      numChildren: e.parameter.numChildren,
-      notes: e.parameter.notes || "",
-    };
-    return jsonResponse(createBooking(data));
+  html { background: var(--cream); }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 15px;
+    color: var(--ink);
+    background: var(--cream);
+    min-height: 100vh;
+    padding: 0 0 60px;
   }
 
-  return jsonError("Action không hợp lệ");
-}
-
-function doPost(e) {
-  try {
-    let body;
-    if (e.parameter && e.parameter.data) {
-      body = JSON.parse(e.parameter.data);
-    } else if (e.postData && e.postData.contents) {
-      body = JSON.parse(e.postData.contents);
-    } else {
-      return jsonError("Không đọc được request body");
-    }
-
-    const action = body.action || "createBooking";
-    if (action === "createBooking") {
-      return jsonResponse(createBooking(body));
-    }
-
-    return jsonError("Action không hợp lệ");
-  } catch (err) {
-    return jsonError("Request không hợp lệ: " + err.message);
+  /* Header */
+  .header {
+    background: var(--white);
+    border-bottom: 1px solid var(--ink-faint);
+    padding: 18px 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
   }
-}
-
-// ============================================================
-// GET SLOTS — Trả về danh sách slot + số chỗ còn lại
-// ============================================================
-
-function getSlotsForDate(date) {
-  const slots = generateSlots();
-  const booked = getBookedCountsByDate(date);
-  const customCapacity = getCustomCapacity(date);
-  
-  // Lấy thời gian hiện tại theo đúng múi giờ Melbourne (Úc) để check slot quá khứ chuẩn xác
-  const now = new Date();
-  const todayStr = Utilities.formatDate(now, "Australia/Melbourne", "yyyy-MM-dd");
-  const currentMinutes = parseInt(Utilities.formatDate(now, "Australia/Melbourne", "HH")) * 60 + 
-                         parseInt(Utilities.formatDate(now, "Australia/Melbourne", "mm"));
-
-  return {
-    date: date,
-    slots: slots.map((slot) => {
-      const capacity = customCapacity[slot.key] ?? CONFIG.MAX_CAPACITY;
-      const bookedCount = booked[slot.key] || 0;
-      const remaining = Math.max(0, capacity - bookedCount);
-
-      // Ẩn slot đã qua (nếu là ngày hôm nay)
-      let isPast = false;
-      if (date === todayStr) {
-        const [h, m] = slot.start.split(":").map(Number);
-        isPast = h * 60 + m < currentMinutes;
-      }
-
-      return {
-        key: slot.key,           // "08:30-09:30"
-        start: slot.start,       // "08:30"
-        end: slot.end,           // "09:30"
-        capacity: capacity,
-        booked: bookedCount,
-        remaining: remaining,
-        status: isPast
-          ? "past"
-          : remaining === 0
-          ? "full"
-          : remaining <= 5
-          ? "almostFull"
-          : "available",
-      };
-    }),
-  };
-}
-
-// ============================================================
-// CREATE BOOKING
-// ============================================================
-
-function createBooking(data) {
-  // Validate input
-  const required = ["date", "slot", "parentName", "parentEmail", "numChildren"];
-  for (const field of required) {
-    if (!data[field]) return { success: false, error: `Thiếu thông tin: ${field}` };
+  .header-logo {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--sage-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+  }
+  .header-title {
+    font-size: 17px;
+    font-weight: bold;
+    color: var(--ink);
+  }
+  .header-sub {
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-top: 1px;
   }
 
-  const numChildren = parseInt(data.numChildren);
-  if (isNaN(numChildren) || numChildren < 1 || numChildren > 10) {
-    return { success: false, error: "Số trẻ không hợp lệ (1-10)" };
+  /* Container */
+  .container {
+    max-width: 560px;
+    margin: 0 auto;
+    padding: 0 20px;
   }
 
-  // Check capacity còn lại
-  const slotsData = getSlotsForDate(data.date);
-  const slot = slotsData.slots.find((s) => s.key === data.slot);
-
-  if (!slot) return { success: false, error: "Slot không tồn tại" };
-  if (slot.status === "past") return { success: false, error: "Slot này đã qua" };
-  if (slot.remaining < numChildren) {
-    return {
-      success: false,
-      error: `Không đủ chỗ. Còn lại: ${slot.remaining} chỗ`,
-      remaining: slot.remaining,
-    };
+  /* Steps indicator */
+  .steps {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    padding: 28px 0 24px;
+  }
+  .step {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+  }
+  .step-num {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: 1.5px solid var(--ink-faint);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: bold;
+    color: var(--ink-soft);
+    background: var(--white);
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .step-label {
+    font-size: 12px;
+    color: var(--ink-soft);
+    transition: color 0.2s;
+  }
+  .step-line {
+    flex: 1;
+    height: 1px;
+    background: var(--ink-faint);
+    margin: 0 8px;
+    max-width: 40px;
+  }
+  .step.active .step-num {
+    background: var(--sage);
+    border-color: var(--sage);
+    color: white;
+  }
+  .step.active .step-label { color: var(--ink); font-weight: bold; }
+  .step.done .step-num {
+    background: var(--sage-light);
+    border-color: var(--sage);
+    color: var(--sage-dark);
   }
 
-  // Ghi vào Sheet
-  const ss = SpreadsheetApp.openById(CONFIG.SHEET_ID);
-  const sheet = ss.getSheetByName(CONFIG.SHEET_BOOKINGS);
-  const bookingId = generateId();
-  const timestamp = new Date();
-
-  sheet.appendRow([
-    bookingId,
-    Utilities.formatDate(timestamp, "Australia/Melbourne", "yyyy-MM-dd HH:mm:ss"),
-    data.date,
-    data.slot,
-    data.parentName,
-    data.parentEmail,
-    data.parentPhone || "",
-    numChildren,
-    data.notes || "",
-    "confirmed",
-  ]);
-
-  // Gửi email xác nhận
-  try {
-    sendConfirmationEmail(data, bookingId, slot);
-  } catch (emailErr) {
-    console.log("Email error:", emailErr.message);
+  /* Cards */
+  .card {
+    background: var(--white);
+    border-radius: var(--radius);
+    border: 1px solid #EAE6E0;
+    padding: 24px;
+    margin-bottom: 16px;
+  }
+  .card-title {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 6px;
+  }
+  .card-sub {
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin-bottom: 20px;
+    line-height: 1.5;
   }
 
-  return {
-    success: true,
-    bookingId: bookingId,
-    message: "Đặt vé thành công!",
-    booking: {
-      id: bookingId,
-      date: data.date,
-      slot: data.slot,
-      numChildren: numChildren,
-      parentName: data.parentName,
-    },
-  };
-}
-
-// ============================================================
-// HELPERS
-// ============================================================
-
-function generateSlots() {
-  const slots = [];
-  const [openH, openM] = CONFIG.OPEN_TIME.split(":").map(Number);
-  const [closeH, closeM] = CONFIG.CLOSE_TIME.split(":").map(Number);
-  const openTotal = openH * 60 + openM;
-  const closeTotal = closeH * 60 + closeM;
-
-  let current = openTotal;
-  while (current + CONFIG.SLOT_DURATION <= closeTotal) {
-    const start = minutesToTime(current);
-    const end = minutesToTime(current + CONFIG.SLOT_DURATION);
-    slots.push({ key: `${start}-${end}`, start, end });
-    current += CONFIG.SLOT_DURATION;
+  /* Date picker */
+  .date-input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1.5px solid var(--ink-faint);
+    border-radius: var(--radius-sm);
+    font-family: inherit;
+    font-size: 15px;
+    color: var(--ink);
+    background: var(--white);
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.15s;
+    appearance: none;
   }
-  return slots;
-}
+  .date-input:focus { border-color: var(--sage); }
 
-function minutesToTime(minutes) {
-  const h = Math.floor(minutes / 60).toString().padStart(2, "0");
-  const m = (minutes % 60).toString().padStart(2, "0");
-  return `${h}:${m}`;
-}
-
-function getBookedCountsByDate(date) {
-  const ss = SpreadsheetApp.openById(CONFIG.SHEET_ID);
-  const sheet = ss.getSheetByName(CONFIG.SHEET_BOOKINGS);
-  const data = sheet.getDataRange().getValues();
-  const counts = {};
-
-  for (let i = 1; i < data.length; i++) {
-    const row = data[i];
-    let rowDateStr = "";
-    if (row[2] instanceof Date) {
-      rowDateStr = Utilities.formatDate(row[2], "Australia/Melbourne", "yyyy-MM-dd");
-    } else {
-      rowDateStr = String(row[2]).trim();
-    }
-
-    if (rowDateStr === date && row[9] === "confirmed") {
-      const slotKey = row[3];
-      const numChildren = parseInt(row[7]) || 0;
-      counts[slotKey] = (counts[slotKey] || 0) + numChildren;
-    }
+  /* Slot grid */
+  .slots-loading {
+    text-align: center;
+    padding: 32px;
+    color: var(--ink-soft);
+    font-size: 13px;
   }
-  return counts;
-}
-
-function getCustomCapacity(date) {
-  const ss = SpreadsheetApp.openById(CONFIG.SHEET_ID);
-  const sheet = ss.getSheetByName(CONFIG.SHEET_CAPACITY);
-  if (!sheet) return {};
-
-  const data = sheet.getDataRange().getValues();
-  const custom = {};
-  
-  for (let i = 1; i < data.length; i++) {
-    const row = data[i]; // ĐÃ SỬA: Định nghĩa rõ ràng dòng hiện tại trong vòng lặp
-    const rowDate = row[0];
-    if (!rowDate) continue;
-
-    let rowDateStr = (rowDate instanceof Date) 
-      ? Utilities.formatDate(rowDate, "Australia/Melbourne", "yyyy-MM-dd") 
-      : String(rowDate).trim();
-
-    if (rowDateStr === date && row[1] && row[2]) {
-      custom[row[1]] = parseInt(row[2]);
-    }
+  .slots-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-top: 4px;
   }
-  return custom;
-}
+  .slot-btn {
+    padding: 12px 8px;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--ink-faint);
+    background: var(--white);
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+    font-family: inherit;
+  }
+  .slot-time {
+    font-size: 13px;
+    font-weight: bold;
+    color: var(--ink);
+    display: block;
+  }
+  .slot-avail {
+    font-size: 11px;
+    margin-top: 3px;
+    display: block;
+    color: var(--ink-soft);
+  }
+  .slot-btn.available {
+    border-color: var(--sage);
+    background: var(--sage-light);
+  }
+  .slot-btn.available:hover {
+    border-color: var(--sage-dark);
+    background: #ffd5d5;
+  }
+  .slot-btn.selected {
+    border-color: var(--sage-dark);
+    background: var(--sage);
+  }
+  .slot-btn.selected .slot-time { color: white; }
+  .slot-btn.selected .slot-avail { color: rgba(255,255,255,0.8); }
+  .slot-btn.almost {
+    border-color: #D4903A;
+    background: #FEF7ED;
+  }
+  .slot-btn.almost .slot-avail { color: #9A5F0F; }
+  .slot-btn.full {
+    border-color: var(--ink-faint);
+    background: #F5F4F2;
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+  .slot-btn.full .slot-time { color: var(--ink-soft); }
+  .slot-btn.full .slot-avail { color: var(--ink-faint); }
+  .slot-btn.past {
+    display: none;
+  }
 
-function generateId() {
-  return "BK" + new Date().getTime().toString(36).toUpperCase();
-}
+  /* Form fields */
+  .field { margin-bottom: 16px; }
+  .field label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink);
+    margin-bottom: 6px;
+  }
+  .field input, .field select {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1.5px solid var(--ink-faint);
+    border-radius: var(--radius-sm);
+    font-family: inherit;
+    font-size: 15px;
+    color: var(--ink);
+    background: var(--white);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .field input:focus, .field select:focus { border-color: var(--sage); }
+  .field input::placeholder { color: var(--ink-faint); }
 
-function sendConfirmationEmail(data, bookingId, slot) {
-  const subject = `Booking Confirmation - My Little Dreamland [ #${bookingId} ]`;
-  let formattedDate = data.date;
-  try {
-    const d = new Date(data.date + 'T00:00:00');
-    formattedDate = d.toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-  } catch (e) {}
+  /* Selected slot summary */
+  .slot-summary {
+    background: var(--sage-light);
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .slot-summary-icon { font-size: 18px; }
+  .slot-summary-text { font-size: 13px; line-height: 1.4; }
+  .slot-summary-main { font-weight: bold; color: var(--sage-dark); }
+  .slot-summary-sub { color: var(--ink-soft); }
 
-  const htmlBody = `
-    <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #1A1714; max-width: 600px; margin: 0 auto; line-height: 1.6;">
-      <h2 style="font-family: Georgia, serif; font-weight: normal; font-size: 24px; margin-bottom: 20px;">Booking Confirmed</h2>
-      <p>Dear ${data.parentName},</p>
-      <p>Thank you for choosing My Little Dreamland. Your booking has been successfully confirmed. Please find your session details below:</p>
-      
-      <table style="width: 100%; border-collapse: collapse; margin: 24px 0; background-color: #FAF8F4; border-radius: 8px;">
-        <tr>
-          <td style="padding: 14px 16px; border-bottom: 1px solid #EAE6E0; font-weight: bold; width: 35%;">Booking Reference:</td>
-          <td style="padding: 14px 16px; border-bottom: 1px solid #EAE6E0; color: #4A7259; font-weight: bold; font-size: 16px;">${bookingId}</td>
-        </tr>
-        <tr>
-          <td style="padding: 14px 16px; border-bottom: 1px solid #EAE6E0; font-weight: bold;">Date:</td>
-          <td style="padding: 14px 16px; border-bottom: 1px solid #EAE6E0;">${formattedDate}</td>
-        </tr>
-        <tr>
-          <td style="padding: 14px 16px; border-bottom: 1px solid #EAE6E0; font-weight: bold;">Session Time:</td>
-          <td style="padding: 14px 16px; border-bottom: 1px solid #EAE6E0;">${slot.start} - ${slot.end}</td>
-        </tr>
-        <tr>
-          <td style="padding: 14px 16px; font-weight: bold;">Number of Children:</td>
-          <td style="padding: 14px 16px;">${data.numChildren} ${parseInt(data.numChildren) > 1 ? 'children' : 'child'}</td>
-        </tr>
-      </table>
-      
-      <div style="background-color: #EDF3EF; border-left: 4px solid #7A9E87; padding: 16px; margin-bottom: 24px; border-radius: 0 8px 8px 0;">
-        <p style="margin: 0; font-weight: bold; color: #4A7259; font-size: 14px;">Important Information:</p>
-        <p style="margin: 6px 0 0 0; font-size: 13px; color: #6B6560;">
-          • Location: 110 Garsed Street, Bendigo VIC 3550<br>
-          • Please arrive 5-10 minutes prior to your scheduled session time.<br>
-          • Socks are required for both adults and children in the play areas.
-        </p>
-      </div>
-      
-      <p style="font-size: 13px; color: #6B6560;">
-        If you need to amend or cancel your booking, please reply directly to this email or contact us at <a href="mailto:hello@mylittledreamland.com.au" style="color: #7A9E87; text-decoration: none;">hello@mylittledreamland.com.au</a>.
-      </p>
-      <p style="margin-top: 32px;">
-        We look forward to welcoming you and your little ones.<br><br>
-        Warm regards,<br>
-        <strong>My Little Dreamland Team</strong>
-      </p>
+  /* Buttons */
+  .btn {
+    width: 100%;
+    padding: 14px;
+    border-radius: var(--radius-sm);
+    border: none;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .btn-primary {
+    background: var(--sage);
+    color: white;
+  }
+  .btn-primary:hover { background: var(--sage-dark); }
+  .btn-primary:disabled {
+    background: var(--ink-faint);
+    cursor: not-allowed;
+  }
+  .btn-ghost {
+    background: transparent;
+    color: var(--ink-soft);
+    border: 1px solid var(--ink-faint);
+    margin-top: 10px;
+  }
+  .btn-ghost:hover { background: var(--cream); }
+
+  /* Success state */
+  .success-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    border: 1px solid #EAE6E0;
+    padding: 40px 24px;
+    text-align: center;
+    margin-top: 16px;
+  }
+  .success-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: var(--sage-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    margin: 0 auto 20px;
+  }
+  .success-title {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 8px;
+  }
+  .success-sub {
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+    max-width: 320px;
+    margin: 0 auto 24px;
+  }
+  .booking-ref {
+    background: var(--cream);
+    border-radius: var(--radius-sm);
+    padding: 12px 20px;
+    display: inline-block;
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+  .booking-ref strong { color: var(--ink); font-size: 16px; display: block; margin-top: 2px; }
+
+  /* Error */
+  .error-msg {
+    background: #FEF2F2;
+    border: 1px solid #FECACA;
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    font-size: 13px;
+    color: #B91C1C;
+    margin-bottom: 16px;
+    display: none;
+  }
+
+  /* Loading spinner */
+  .spinner {
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(255,255,255,0.4);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Screen management */
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  @media (max-width: 400px) {
+    .slots-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-logo">🌈</div>
+  <div>
+    <div class="header-title">My Little Dreamland</div>
+    <div class="header-sub">Book a session</div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="steps">
+    <div class="step active" id="step1">
+      <div class="step-num">1</div>
+      <span class="step-label">Pick a time</span>
     </div>
-  `;
+    <div class="step-line"></div>
+    <div class="step" id="step2">
+      <div class="step-num">2</div>
+      <span class="step-label">Your details</span>
+    </div>
+    <div class="step-line"></div>
+    <div class="step" id="step3">
+      <div class="step-num">3</div>
+      <span class="step-label">Confirmed</span>
+    </div>
+  </div>
 
-  GmailApp.sendEmail(data.parentEmail, subject, "", { htmlBody: htmlBody });
-}
+  <div class="screen active" id="screen-1">
+    <div class="card">
+      <div class="card-title">When are you visiting?</div>
+      <div class="card-sub">Sessions run every hour. Each slot fits up to 40 children.</div>
+      <div class="field">
+        <label>Select a date</label>
+        <input type="date" class="date-input" id="date-input">
+      </div>
+      <div id="slots-container"></div>
+    </div>
+    <button class="btn btn-primary" id="btn-next-1" disabled>Continue to details</button>
+  </div>
 
-function jsonResponse(data) {
-  return ContentService.createTextOutput(JSON.stringify(data)).setMimeType(ContentService.MimeType.JSON);
-}
+  <div class="screen" id="screen-2">
+    <div class="card">
+      <div class="card-title">Your details</div>
+      <div class="card-sub">We'll send a confirmation email once your booking is placed.</div>
+      <div class="slot-summary" id="slot-summary">
+        <div class="slot-summary-icon">🕐</div>
+        <div class="slot-summary-text">
+          <div class="slot-summary-main" id="summary-main"></div>
+          <div class="slot-summary-sub" id="summary-sub"></div>
+        </div>
+      </div>
+      <div class="error-msg" id="error-msg"></div>
+      <div class="field">
+        <label>Parent / guardian name</label>
+        <input type="text" id="f-name" placeholder="Jane Smith">
+      </div>
+      <div class="field">
+        <label>Email address</label>
+        <input type="email" id="f-email" placeholder="jane@email.com">
+      </div>
+      <div class="field">
+        <label>Phone number</label>
+        <input type="tel" id="f-phone" placeholder="0400 000 000">
+      </div>
+      <div class="field">
+        <label>Number of children</label>
+        <select id="f-children">
+          <option value="">Select...</option>
+          <option>1</option><option>2</option><option>3</option>
+          <option>4</option><option>5</option><option>6</option>
+          <option>7</option><option>8</option><option>9</option><option>10</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn btn-primary" id="btn-submit">Confirm booking</button>
+    <button class="btn btn-ghost" id="btn-back">← Back</button>
+  </div>
 
-function jsonError(message) {
-  return ContentService.createTextOutput(JSON.stringify({ success: false, error: message })).setMimeType(ContentService.MimeType.JSON);
-}
+  <div class="screen" id="screen-3">
+    <div class="success-card">
+      <div class="success-icon">🎉</div>
+      <div class="success-title">You're all booked!</div>
+      <div class="success-sub">A confirmation email is on its way. We can't wait to see your little ones at Dreamland.</div>
+      <div class="booking-ref">Booking reference <strong id="booking-id">—</strong></div>
+      <br><br>
+      <div style="font-size:13px; color:#6B6560; line-height:1.6;">
+        📍 110 Garsed Street, Bendigo VIC 3550<br>
+        🕐 Please arrive a few minutes before your session
+      </div>
+    </div>
+    <button class="btn btn-ghost" style="margin-top:16px" onclick="resetForm()">Book another session</button>
+  </div>
+</div>
+
+<script>
+  const API_URL = "https://script.google.com/macros/s/AKfycbwd0Zs_ewx9LDmBT_WNpT4H07BODU4e7nrR0ZQJsJbLBnrwFaIrnLLDRrJ5uJl2p-MN7Q/exec";
+  let selectedDate = null; let selectedSlot = null;
+  const dateInput = document.getElementById('date-input');
+  const nowLoc = new Date();
+  const today = nowLoc.getFullYear() + '-' + String(nowLoc.getMonth() + 1).padStart(2, '0') + '-' + String(nowLoc.getDate()).padStart(2, '0');
+  dateInput.min = today; dateInput.value = today;
+
+  dateInput.addEventListener('change', () => {
+    selectedSlot = null; document.getElementById('btn-next-1').disabled = true; loadSlots(dateInput.value);
+  });
+
+  async function loadSlots(date) {
+    selectedDate = date; const container = document.getElementById('slots-container');
+    container.innerHTML = '<div class="slots-loading">Loading available times...</div>';
+    try {
+      const res = await fetch(`${API_URL}?action=getSlots&date=${date}`);
+      const data = await res.json(); renderSlots(data.slots);
+    } catch (e) {
+      container.innerHTML = '<div class="slots-loading" style="color:#B91C1C">Could not load times. Please try again.</div>';
+    }
+  }
+
+  function renderSlots(slots) {
+    const container = document.getElementById('slots-container');
+    const visible = slots.filter(s => s.status !== 'past');
+    if (visible.length === 0) {
+      container.innerHTML = '<div class="slots-loading">No more sessions available today. Please choose another date.</div>'; return;
+    }
+    const grid = document.createElement('div'); grid.className = 'slots-grid';
+    slots.forEach(slot => {
+      const btn = document.createElement('button'); btn.className = `slot-btn ${slot.status}`; btn.dataset.key = slot.key;
+      let availText = '';
+      if (slot.status === 'available') availText = `${slot.remaining} spots left`;
+      else if (slot.status === 'almostFull') availText = `Only ${slot.remaining} left!`;
+      else if (slot.status === 'full') availText = 'Full';
+      btn.innerHTML = `<span class="slot-time">${slot.start}</span><span class="slot-avail">${availText}</span>`;
+      if (slot.status !== 'full' && slot.status !== 'past') {
+        btn.addEventListener('click', () => selectSlot(slot, btn));
+      }
+      grid.appendChild(btn);
+    });
+    container.innerHTML = ''; container.appendChild(grid);
+  }
+
+  function selectSlot(slot, btn) {
+    document.querySelectorAll('.slot-btn').forEach(b => { if (b.dataset.key !== slot.key) b.classList.remove('selected'); });
+    btn.classList.add('selected'); selectedSlot = slot; document.getElementById('btn-next-1').disabled = false;
+  }
+
+  document.getElementById('btn-next-1').addEventListener('click', () => {
+    if (!selectedSlot) return;
+    const d = new Date(selectedDate + 'T00:00:00');
+    const dateStr = d.toLocaleDateString('en-AU', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+    document.getElementById('summary-main').textContent = `${selectedSlot.start} - ${selectedSlot.end}`;
+    document.getElementById('summary-sub').textContent = dateStr; goToScreen(2);
+  });
+
+  document.getElementById('btn-back').addEventListener('click', () => goToScreen(1));
+
+  document.getElementById('btn-submit').addEventListener('click', async () => {
+    const name = document.getElementById('f-name').value.trim();
+    const email = document.getElementById('f-email').value.trim();
+    const phone = document.getElementById('f-phone').value.trim();
+    const children = document.getElementById('f-children').value;
+    const errEl = document.getElementById('error-msg');
+    errEl.style.display = 'none';
+    if (!name || !email || !phone || !children) { errEl.textContent = 'Please fill in all fields.'; errEl.style.display = 'block'; return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { errEl.textContent = 'Please enter a valid email address.'; errEl.style.display = 'block'; return; }
+    const btn = document.getElementById('btn-submit'); btn.disabled = true; btn.innerHTML = '<div class="spinner"></div> Confirming...';
+    try {
+      const params = new URLSearchParams({ action: 'createBooking', date: selectedDate, slot: selectedSlot.key, parentName: name, parentEmail: email, parentPhone: phone, numChildren: String(parseInt(children)) });
+      const res = await fetch(`${API_URL}?${params.toString()}`); const data = await res.json();
+      if (data.success) { document.getElementById('booking-id').textContent = data.bookingId; goToScreen(3); } 
+      else { errEl.textContent = data.error || 'Something went wrong.'; errEl.style.display = 'block'; btn.disabled = false; btn.innerHTML = 'Confirm booking'; }
+    } catch (e) {
+      errEl.textContent = 'Connection error.'; errEl.style.display = 'block'; btn.disabled = false; btn.innerHTML = 'Confirm booking';
+    }
+  });
+
+  function goToScreen(n) {
+    document.querySelectorAll('.screen').forEach((s, i) => { s.classList.toggle('active', i + 1 === n); });
+    for (let i = 1; i <= 3; i++) {
+      const el = document.getElementById(`step${i}`); el.classList.remove('active', 'done');
+      if (i < n) el.classList.add('done'); else if (i === n) el.classList.add('active');
+    }
+    window.scrollTo(0, 0);
+  }
+
+  function resetForm() {
+    selectedDate = null; selectedSlot = null;
+    document.getElementById('f-name').value = ''; document.getElementById('f-email').value = '';
+    document.getElementById('f-phone').value = ''; document.getElementById('f-children').value = '';
+    document.getElementById('slots-container').innerHTML = ''; document.getElementById('btn-next-1').disabled = true;
+    dateInput.value = today; loadSlots(today); goToScreen(1);
+  }
+  loadSlots(today);
+</script>
+</body>
+</html>
