@@ -12,7 +12,7 @@
 
     --cream: #FAF8F4; --white: #FFFFFF; --ink: #1A1714; --ink-soft: #6B6560;
 
-    --ink-faint: #C8C3BC; --sage: #7A9E87; --sage-light: #EDF3EF; --sage-dark: #4A7259;
+    --ink-faint: #EAE6E0; --sage: #ffadad; --sage-light: #fff5f5; --sage-dark: #ff8fa3;
 
     --radius: 14px; --radius-sm: 8px;
 
@@ -22,12 +22,12 @@
   html, body {
     margin: 0; padding: 0; width: 100%; min-height: 100vh;
     background: linear-gradient(135deg, 
-      rgba(255,173,173,0.3) 0%, 
-      rgba(255,214,165,0.3) 20%, 
-      rgba(253,255,182,0.3) 40%, 
-      rgba(202,255,191,0.3) 60%, 
-      rgba(155,246,255,0.3) 80%, 
-      rgba(160,196,255,0.3) 100%
+      rgba(255,173,173,0.15) 0%, 
+      rgba(255,214,165,0.15) 20%, 
+      rgba(253,255,182,0.15) 40%, 
+      rgba(202,255,191,0.15) 60%, 
+      rgba(155,246,255,0.15) 80%, 
+      rgba(160,196,255,0.15) 100%
     ) fixed !important;
     position: relative; overflow-x: hidden;
   }
@@ -92,11 +92,11 @@
   .slot-item {
     display: flex; align-items: center; gap: 14px; padding: 12px 16px; border-radius: var(--radius-sm); border: 1.5px solid var(--ink-faint); background: var(--white); cursor: pointer; transition: all 0.15s; font-family: 'DM Sans', sans-serif;
   }
-  .slot-item.available:hover { border-color: var(--sage); background: #f0f5f2; }
+  .slot-item.available:hover { border-color: var(--sage); background: var(--sage-light); }
   .slot-item.selected { border-color: var(--sage) !important; background: var(--sage) !important; }
   .slot-item.selected .slot-time-label { color: white !important; }
-  .slot-item.selected .slot-play-time { color: rgba(255,255,255,0.8) !important; }
-  .slot-item.selected .slot-badge { background: rgba(255,255,255,0.2) !important; color: white !important; }
+  .slot-item.selected .slot-play-time { color: rgba(255,255,255,0.75) !important; }
+  .slot-item.selected .slot-badge { background: rgba(255,255,255,0.25) !important; color: white !important; }
   .slot-item.almostFull { border-color: #D4903A; background: #FEF7ED; }
   .slot-item.full { opacity: 0.5; cursor: not-allowed; background: #F5F4F2; }
 
@@ -148,7 +148,7 @@
   .btn-primary:hover { background: var(--sage-dark); }
   .btn-primary:disabled { background: var(--ink-faint); cursor: not-allowed; }
   .btn-ghost { background: transparent; color: var(--ink-soft); border: 1px solid var(--ink-faint); margin-top: 10px; }
-  .btn-ghost:hover { background: rgba(255,255,255,0.3); }
+  .btn-ghost:hover { background: var(--cream); }
 
   .success-card { background: var(--white); border-radius: var(--radius); border: 1px solid #EAE6E0; padding: 40px 24px; text-align: center; margin-top: 16px; }
   .success-icon { width: 64px; height: 64px; border-radius: 50%; background: var(--sage-light); display: flex; align-items: center; justify-content: center; font-size: 28px; margin: 0 auto 20px; }
@@ -163,6 +163,116 @@
   @keyframes spin { to { transform: rotate(360deg); } }
   .screen { display: none; }
   .screen.active { display: block; }
+
+  /* Pink pastel colour override from reference code */
+  .header-logo { background: #ffe3e8 !important; }
+
+  .card-title, .success-title {
+    text-shadow: 0 0 10px rgba(255,255,255,0.8);
+  }
+
+  .step-num {
+    border-color: #ffcdb2 !important;
+    color: #ffb7b2 !important;
+  }
+  .step-line {
+    background: #ffcdb2 !important;
+  }
+  .step.active .step-num {
+    background: #ffb7b2 !important;
+    border-color: #ffb7b2 !important;
+    color: white !important;
+    box-shadow: 0 0 8px rgba(255,183,178,0.5);
+  }
+  .step.done .step-num {
+    background: #b5e2fa !important;
+    border-color: #b5e2fa !important;
+    color: #ff8fa3 !important;
+  }
+
+  .card {
+    border-color: rgba(0,0,0,0.05) !important;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.04) !important;
+  }
+
+  .date-input:focus,
+  .field input:focus,
+  .field select:focus {
+    border-color: #ffadad !important;
+  }
+
+  .hour-btn:hover,
+  .hour-btn.open {
+    border-color: #ffadad !important;
+    background: #fff5f5 !important;
+  }
+  .hour-btn::after {
+    color: #ffadad !important;
+  }
+  .sub-slots {
+    border-color: #ffadad !important;
+  }
+
+  .slot-item.available:hover {
+    border-color: #ffadad !important;
+    background: #ffe3e8 !important;
+  }
+  .slot-item.selected {
+    border-color: #ff8fa3 !important;
+    background: #ffadad !important;
+  }
+  .slot-item.available .slot-dot {
+    background: #ffadad !important;
+  }
+  .slot-item.available .slot-badge,
+  .slot-summary,
+  .success-icon,
+  .booking-ref {
+    background: #fff5f5 !important;
+  }
+  .slot-summary {
+    border: 1px solid #ffe3e8;
+  }
+  .slot-item.available .slot-badge,
+  .slot-summary-val,
+  .booking-ref strong {
+    color: #ff8fa3 !important;
+  }
+
+  .waiver-section-num,
+  .btn-primary {
+    background: #ffadad !important;
+  }
+  .btn-primary {
+    color: white !important;
+    box-shadow: 0 4px 10px rgba(255,173,173,0.3);
+  }
+  .btn-primary:hover {
+    background: #ff8fa3 !important;
+  }
+  .btn-primary:disabled {
+    background: #EAE6E0 !important;
+    color: #6B6560 !important;
+    box-shadow: none !important;
+  }
+
+  .waiver-checkbox-row input[type="checkbox"],
+  .waiver-radio-row input[type="radio"],
+  .final-ack input[type="checkbox"] {
+    accent-color: #ffadad !important;
+  }
+  .final-ack {
+    border-color: #ffadad !important;
+    background: #fff5f5 !important;
+  }
+  .final-ack label {
+    color: #ff8fa3 !important;
+  }
+
+  .btn-ghost:hover {
+    background: rgba(255,255,255,0.5) !important;
+  }
+
 </style>
 </head>
 <body>
