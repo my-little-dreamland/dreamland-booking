@@ -12,7 +12,7 @@
 
     --cream: #FAF8F4; --white: #FFFFFF; --ink: #1A1714; --ink-soft: #6B6560;
 
-    --ink-faint: #EAE6E0; --sage: #ffadad; --sage-light: #fff5f5; --sage-dark: #ff8fa3;
+    --ink-faint: #C8C3BC; --sage: #ffadad; --sage-light: #fff5f5; --sage-dark: #ff8fa3;
 
     --radius: 14px; --radius-sm: 8px;
 
@@ -92,11 +92,11 @@
   .slot-item {
     display: flex; align-items: center; gap: 14px; padding: 12px 16px; border-radius: var(--radius-sm); border: 1.5px solid var(--ink-faint); background: var(--white); cursor: pointer; transition: all 0.15s; font-family: 'DM Sans', sans-serif;
   }
-  .slot-item.available:hover { border-color: var(--sage); background: var(--sage-light); }
+  .slot-item.available:hover { border-color: var(--sage); background: #ffe3e8; }
   .slot-item.selected { border-color: var(--sage) !important; background: var(--sage) !important; }
   .slot-item.selected .slot-time-label { color: white !important; }
-  .slot-item.selected .slot-play-time { color: rgba(255,255,255,0.75) !important; }
-  .slot-item.selected .slot-badge { background: rgba(255,255,255,0.25) !important; color: white !important; }
+  .slot-item.selected .slot-play-time { color: rgba(255,255,255,0.8) !important; }
+  .slot-item.selected .slot-badge { background: rgba(255,255,255,0.2) !important; color: white !important; }
   .slot-item.almostFull { border-color: #D4903A; background: #FEF7ED; }
   .slot-item.full { opacity: 0.5; cursor: not-allowed; background: #F5F4F2; }
 
@@ -148,7 +148,7 @@
   .btn-primary:hover { background: var(--sage-dark); }
   .btn-primary:disabled { background: var(--ink-faint); cursor: not-allowed; }
   .btn-ghost { background: transparent; color: var(--ink-soft); border: 1px solid var(--ink-faint); margin-top: 10px; }
-  .btn-ghost:hover { background: var(--cream); }
+  .btn-ghost:hover { background: rgba(255,255,255,0.3); }
 
   .success-card { background: var(--white); border-radius: var(--radius); border: 1px solid #EAE6E0; padding: 40px 24px; text-align: center; margin-top: 16px; }
   .success-icon { width: 64px; height: 64px; border-radius: 50%; background: var(--sage-light); display: flex; align-items: center; justify-content: center; font-size: 28px; margin: 0 auto 20px; }
@@ -164,25 +164,20 @@
   .screen { display: none; }
   .screen.active { display: block; }
 
-  /* Pink pastel colour override from reference code */
-  .header-logo { background: #ffe3e8 !important; }
 
-  .card-title, .success-title {
-    text-shadow: 0 0 10px rgba(255,255,255,0.8);
-  }
+  /* VERIFIED PINK PASTEL OVERRIDE — colours from reference code only */
+  .header-logo { background: #ffe3e8 !important; }
 
   .step-num {
     border-color: #ffcdb2 !important;
     color: #ffb7b2 !important;
   }
-  .step-line {
-    background: #ffcdb2 !important;
-  }
+  .step-line { background: #ffcdb2 !important; }
   .step.active .step-num {
     background: #ffb7b2 !important;
     border-color: #ffb7b2 !important;
-    color: white !important;
-    box-shadow: 0 0 8px rgba(255,183,178,0.5);
+    color: #ffffff !important;
+    box-shadow: 0 0 8px rgba(255,183,178,0.5) !important;
   }
   .step.done .step-num {
     background: #b5e2fa !important;
@@ -193,6 +188,9 @@
   .card {
     border-color: rgba(0,0,0,0.05) !important;
     box-shadow: 0 6px 18px rgba(0,0,0,0.04) !important;
+  }
+  .card-title, .success-title {
+    text-shadow: 0 0 10px rgba(255,255,255,0.8) !important;
   }
 
   .date-input:focus,
@@ -206,12 +204,8 @@
     border-color: #ffadad !important;
     background: #fff5f5 !important;
   }
-  .hour-btn::after {
-    color: #ffadad !important;
-  }
-  .sub-slots {
-    border-color: #ffadad !important;
-  }
+  .hour-btn::after { color: #ffadad !important; }
+  .sub-slots { border-color: #ffadad !important; }
 
   .slot-item.available:hover {
     border-color: #ffadad !important;
@@ -221,21 +215,20 @@
     border-color: #ff8fa3 !important;
     background: #ffadad !important;
   }
-  .slot-item.available .slot-dot {
-    background: #ffadad !important;
-  }
+  .slot-item.available .slot-dot { background: #ffadad !important; }
+  .slot-item.selected .slot-dot { background: #ffffff !important; }
   .slot-item.available .slot-badge,
   .slot-summary,
   .success-icon,
   .booking-ref {
     background: #fff5f5 !important;
   }
-  .slot-summary {
-    border: 1px solid #ffe3e8;
-  }
+  .slot-summary { border: 1px solid #ffe3e8 !important; }
   .slot-item.available .slot-badge,
   .slot-summary-val,
-  .booking-ref strong {
+  .child-group-title,
+  .booking-ref strong,
+  .final-ack label {
     color: #ff8fa3 !important;
   }
 
@@ -244,12 +237,10 @@
     background: #ffadad !important;
   }
   .btn-primary {
-    color: white !important;
-    box-shadow: 0 4px 10px rgba(255,173,173,0.3);
+    color: #ffffff !important;
+    box-shadow: 0 4px 10px rgba(255,173,173,0.3) !important;
   }
-  .btn-primary:hover {
-    background: #ff8fa3 !important;
-  }
+  .btn-primary:hover { background: #ff8fa3 !important; }
   .btn-primary:disabled {
     background: #EAE6E0 !important;
     color: #6B6560 !important;
@@ -265,13 +256,7 @@
     border-color: #ffadad !important;
     background: #fff5f5 !important;
   }
-  .final-ack label {
-    color: #ff8fa3 !important;
-  }
-
-  .btn-ghost:hover {
-    background: rgba(255,255,255,0.5) !important;
-  }
+  .btn-ghost:hover { background: rgba(255,255,255,0.5) !important; }
 
 </style>
 </head>
