@@ -38,16 +38,34 @@
   .date-input { width: 100%; padding: 12px 16px; border: 1.5px solid var(--ink-faint); border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif; font-size: 15px; color: var(--ink); background: var(--white); cursor: pointer; outline: none; transition: border-color 0.15s; appearance: none; }
   .date-input:focus { border-color: var(--sage); }
 
-  /* Slot list — vertical timeline style */
+  /* Accordion Slots */
   .slots-loading { text-align: center; padding: 32px; color: var(--ink-soft); font-size: 13px; }
-  .slots-list { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+  .hour-group { margin-top: 12px; }
+  .hour-btn { 
+    width: 100%; padding: 16px 20px; background: var(--white);
+    border: 1.5px solid var(--ink-faint); border-radius: var(--radius-sm);
+    text-align: left; font-size: 16px; font-weight: 600; color: var(--ink);
+    display: flex; justify-content: space-between; align-items: center;
+    cursor: pointer; transition: all 0.2s; font-family: 'DM Sans', sans-serif;
+  }
+  .hour-btn:hover { border-color: var(--sage); background: var(--sage-light); }
+  .hour-btn::after { content: '+'; font-size: 24px; color: var(--sage); font-weight: 300; line-height: 1; }
+  .hour-btn.open { border-bottom-left-radius: 0; border-bottom-right-radius: 0; border-bottom-color: transparent; background: var(--sage-light); border-color: var(--sage); }
+  .hour-btn.open::after { content: '−'; }
+  
+  .sub-slots { 
+    display: none; flex-direction: column; gap: 8px; 
+    padding: 12px 16px 16px; background: var(--white);
+    border: 1.5px solid var(--sage); border-top: none;
+    border-bottom-left-radius: var(--radius-sm); border-bottom-right-radius: var(--radius-sm);
+  }
   .slot-item {
     display: flex; align-items: center; gap: 14px;
-    padding: 14px 16px; border-radius: var(--radius-sm);
+    padding: 12px 16px; border-radius: var(--radius-sm);
     border: 1.5px solid var(--ink-faint); background: var(--white);
     cursor: pointer; transition: all 0.15s; font-family: 'DM Sans', sans-serif;
   }
-  .slot-item.available:hover { border-color: var(--sage); background: var(--sage-light); }
+  .slot-item.available:hover { border-color: var(--sage); background: #f0f5f2; }
   .slot-item.selected { border-color: var(--sage); background: var(--sage); }
   .slot-item.almostFull { border-color: #D4903A; background: #FEF7ED; }
   .slot-item.almostFull:hover { border-color: #B8731A; }
@@ -75,10 +93,14 @@
   .slot-item.selected .slot-badge { background: rgba(255,255,255,0.25); color: white; }
 
   .field { margin-bottom: 16px; }
-  .field label { display: block; font-size: 13px; font-weight: 500; color: var(--ink); margin-bottom: 6px; }
+  .field label { display: block; font-size: 13px; font-weight: 600; color: var(--ink); margin-bottom: 6px; }
   .field input, .field select { width: 100%; padding: 12px 16px; border: 1.5px solid var(--ink-faint); border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif; font-size: 15px; color: var(--ink); background: var(--white); outline: none; transition: border-color 0.15s; }
   .field input:focus, .field select:focus { border-color: var(--sage); }
   .field input::placeholder { color: var(--ink-faint); }
+
+  /* Child info blocks */
+  .child-group { background: #FAFAF9; border: 1px solid #EAE6E0; border-radius: var(--radius-sm); padding: 16px; margin-bottom: 12px; display: none; }
+  .child-group-title { font-size: 14px; font-weight: 600; color: var(--sage-dark); margin-bottom: 12px; border-bottom: 1px solid #EAE6E0; padding-bottom: 8px;}
 
   .slot-summary { background: var(--sage-light); border-radius: var(--radius-sm); padding: 14px 16px; margin-bottom: 20px; }
   .slot-summary-row { display: flex; align-items: center; gap: 8px; font-size: 13px; margin-bottom: 4px; }
@@ -103,7 +125,7 @@
   .radio-option label { font-size: 13px; color: var(--ink); cursor: pointer; }
   .final-ack { border: 2px solid var(--sage); border-radius: var(--radius-sm); padding: 16px; margin-top: 16px; display: flex; align-items: flex-start; gap: 12px; background: var(--sage-light); }
   .final-ack input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--sage); cursor: pointer; flex-shrink: 0; margin-top: 2px; }
-  .final-ack label { font-size: 13px; color: var(--sage-dark); font-weight: 500; cursor: pointer; line-height: 1.5; }
+  .final-ack label { font-size: 13px; color: var(--sage-dark); font-weight: 600; cursor: pointer; line-height: 1.5; }
 
   .btn { width: 100%; padding: 14px; border-radius: var(--radius-sm); border: none; font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 8px; }
   .btn-primary { background: var(--sage); color: white; }
@@ -148,7 +170,6 @@
     <div class="step" id="step4"><div class="step-num">4</div><span class="step-label">Confirmed</span></div>
   </div>
 
-  <!-- Screen 1: Date → Slots -->
   <div class="screen active" id="screen-1">
     <div class="card">
       <div class="card-title">When are you visiting?</div>
@@ -162,25 +183,30 @@
     <button class="btn btn-primary" id="btn-next-1" disabled>Continue to details</button>
   </div>
 
-  <!-- Screen 2: Details -->
   <div class="screen" id="screen-2">
     <div class="card">
-      <div class="card-title">Your details</div>
-      <div class="card-sub">We'll send a confirmation email after you complete the waiver.</div>
+      <div class="card-title">Contact Information</div>
+      <div class="card-sub">We'll use this to send your confirmation and hold your spot.</div>
       <div class="slot-summary" id="slot-summary">
         <div class="slot-summary-row"><span class="slot-summary-label">Date</span><span class="slot-summary-val" id="sum-date"></span></div>
         <div class="slot-summary-row"><span class="slot-summary-label">Entry</span><span class="slot-summary-val" id="sum-entry"></span></div>
         <div class="slot-summary-row"><span class="slot-summary-label">Session ends</span><span class="slot-summary-val" id="sum-exit"></span></div>
       </div>
       <div class="error-msg" id="error-msg-2"></div>
-      <div class="field"><label>Parent / guardian name</label><input type="text" id="f-name" placeholder="Jane Smith"></div>
-      <div class="field"><label>Email address</label><input type="email" id="f-email" placeholder="jane@email.com"></div>
-      <div class="field"><label>Phone number</label><input type="tel" id="f-phone" placeholder="0400 000 000"></div>
-      <div class="field">
-        <label>Number of children</label>
+      
+      <div class="field"><label>Parent / Guardian Full Name</label><input type="text" id="f-name" placeholder="Jane Smith"></div>
+      <div class="field"><label>Primary Phone Number</label><input type="tel" id="f-phone" placeholder="0400 000 000"></div>
+      <div class="field"><label>Email Address</label><input type="email" id="f-email" placeholder="jane@email.com"></div>
+      
+      <div class="field" style="margin-top: 24px;">
+        <label>Number of children participating today (including infants)</label>
         <select id="f-children">
           <option value="">Select...</option>
-          <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
+          <option value="1">1 Child</option>
+          <option value="2">2 Children</option>
+          <option value="3">3 Children</option>
+          <option value="4">4 Children</option>
+          <option value="5">5+ Children</option>
         </select>
       </div>
     </div>
@@ -188,11 +214,39 @@
     <button class="btn btn-ghost" id="btn-back-1">← Back</button>
   </div>
 
-  <!-- Screen 3: Waiver -->
   <div class="screen" id="screen-3">
     <div class="card">
-      <div class="card-title">Liability Waiver</div>
-      <div class="card-sub">Please read and agree to all policies. Must be completed by the parent or legal guardian.</div>
+      <div class="card-title">Liability Waiver & Details</div>
+      <div class="card-sub">Please provide details for the children and read the policies below. This form must be completed by the parent or legal guardian.</div>
+      
+      <div id="children-container" style="margin-bottom: 24px;">
+        <div class="child-group" id="child-group-1">
+          <div class="child-group-title">Child 1</div>
+          <div class="field"><label>Full Name</label><input type="text" id="c-name-1" placeholder="Child's full name"></div>
+          <div class="field" style="margin-bottom:0;"><label>Date of Birth</label><input type="date" id="c-dob-1"></div>
+        </div>
+        <div class="child-group" id="child-group-2">
+          <div class="child-group-title">Child 2</div>
+          <div class="field"><label>Full Name</label><input type="text" id="c-name-2" placeholder="Child's full name"></div>
+          <div class="field" style="margin-bottom:0;"><label>Date of Birth</label><input type="date" id="c-dob-2"></div>
+        </div>
+        <div class="child-group" id="child-group-3">
+          <div class="child-group-title">Child 3</div>
+          <div class="field"><label>Full Name</label><input type="text" id="c-name-3" placeholder="Child's full name"></div>
+          <div class="field" style="margin-bottom:0;"><label>Date of Birth</label><input type="date" id="c-dob-3"></div>
+        </div>
+        <div class="child-group" id="child-group-4">
+          <div class="child-group-title">Child 4</div>
+          <div class="field"><label>Full Name</label><input type="text" id="c-name-4" placeholder="Child's full name"></div>
+          <div class="field" style="margin-bottom:0;"><label>Date of Birth</label><input type="date" id="c-dob-4"></div>
+        </div>
+        <div class="child-group" id="child-group-5">
+          <div class="child-group-title">Child 5</div>
+          <div class="field"><label>Full Name</label><input type="text" id="c-name-5" placeholder="Child's full name"></div>
+          <div class="field" style="margin-bottom:0;"><label>Date of Birth</label><input type="date" id="c-dob-5"></div>
+        </div>
+      </div>
+
       <div class="waiver-intro">This waiver applies to all children in your care during your visit to My Little Dreamland, 110 Garsed Street, Bendigo VIC 3550.</div>
 
       <div class="waiver-section">
@@ -201,17 +255,17 @@
       </div>
 
       <div class="waiver-section">
-        <div class="waiver-section-header"><div class="waiver-section-num">2</div><div><div class="waiver-section-title">Supervision Policy</div><div class="waiver-section-body">I agree to actively supervise all children in my care while on the premises. Staff support venue operations but are not a substitute for my direct supervision.</div></div></div>
+        <div class="waiver-section-header"><div class="waiver-section-num">2</div><div><div class="waiver-section-title">Supervision Policy</div><div class="waiver-section-body">I agree to actively supervise all children in my care while on the premises. I understand that staff support venue operations but are not a substitute for my direct supervision.</div></div></div>
         <div class="waiver-checkbox-row"><input type="checkbox" id="w2" onchange="updateWaiverBtn()"><label for="w2">I agree to supervise my children at all times.</label></div>
       </div>
 
       <div class="waiver-section">
-        <div class="waiver-section-header"><div class="waiver-section-num">3</div><div><div class="waiver-section-title">Health and Hygiene</div><div class="waiver-section-body">I confirm the children attending are fit to play and will not attend while unwell (fever, vomiting, diarrhea, or contagious symptoms). I agree to follow all hygiene guidance including the socks policy.</div></div></div>
-        <div class="waiver-checkbox-row"><input type="checkbox" id="w3" onchange="updateWaiverBtn()"><label for="w3">I confirm my children are healthy and will adhere to all hygiene rules.</label></div>
+        <div class="waiver-section-header"><div class="waiver-section-num">3</div><div><div class="waiver-section-title">Health and Hygiene</div><div class="waiver-section-body">I confirm that the children attending are fit to play and will not attend while unwell (fever, vomiting, diarrhea, or contagious symptoms). I agree to follow all posted hygiene guidance (e.g., shoes/socks policy).</div></div></div>
+        <div class="waiver-checkbox-row"><input type="checkbox" id="w3" onchange="updateWaiverBtn()"><label for="w3">I confirm my children are healthy and I will adhere to all hygiene rules.</label></div>
       </div>
 
       <div class="waiver-section">
-        <div class="waiver-section-header"><div class="waiver-section-num">4</div><div><div class="waiver-section-title">Safety Rules</div><div class="waiver-section-body">I agree that I and my children will follow all staff directions, posted signs, and ensure play matches age and zone suitability. Unsafe behavior may result in removal.</div></div></div>
+        <div class="waiver-section-header"><div class="waiver-section-num">4</div><div><div class="waiver-section-title">Safety Rules</div><div class="waiver-section-body">I agree that I and my children will follow all staff directions, posted signs, and ensure play matches age and zone suitability. I understand that unsafe behavior may result in removal.</div></div></div>
         <div class="waiver-checkbox-row"><input type="checkbox" id="w4" onchange="updateWaiverBtn()"><label for="w4">I agree to comply with all safety rules and staff directions.</label></div>
       </div>
 
@@ -221,12 +275,12 @@
       </div>
 
       <div class="waiver-section">
-        <div class="waiver-section-header"><div class="waiver-section-num">6</div><div><div class="waiver-section-title">Release of Liability</div><div class="waiver-section-body">To the extent permitted by law, I release My Little Dreamland and its team from claims related to ordinary play activities on site. This does not limit rights under Australian Consumer Law.</div></div></div>
+        <div class="waiver-section-header"><div class="waiver-section-num">6</div><div><div class="waiver-section-title">Release of Liability</div><div class="waiver-section-body">To the extent permitted by law, I release My Little Dreamland and its team from claims related to ordinary play activities on site. I understand this does not limit rights that cannot be excluded under Australian Consumer Law.</div></div></div>
         <div class="waiver-checkbox-row"><input type="checkbox" id="w6" onchange="updateWaiverBtn()"><label for="w6">I acknowledge and agree to the release of liability provision.</label></div>
       </div>
 
       <div class="waiver-section">
-        <div class="waiver-section-header"><div class="waiver-section-num">7</div><div><div class="waiver-section-title">Personal Belongings</div><div class="waiver-section-body">Personal items remain my sole responsibility. My Little Dreamland is not responsible for loss, theft, or damage of personal items.</div></div></div>
+        <div class="waiver-section-header"><div class="waiver-section-num">7</div><div><div class="waiver-section-title">Personal Belongings</div><div class="waiver-section-body">I understand personal items remain my sole responsibility while visiting the venue, and My Little Dreamland is not responsible for loss, theft, or damage of personal items.</div></div></div>
         <div class="waiver-checkbox-row"><input type="checkbox" id="w7" onchange="updateWaiverBtn()"><label for="w7">I acknowledge responsibility for all personal belongings.</label></div>
       </div>
 
@@ -240,7 +294,7 @@
 
       <div class="final-ack">
         <input type="checkbox" id="w-final" onchange="updateWaiverBtn()">
-        <label for="w-final">I am the parent/legal guardian and have read, understood, and agreed to the entire waiver (Sections 1–8).</label>
+        <label for="w-final">9. Final Acknowledgement: By checking this box, I confirm I am the parent/legal guardian for the listed child(ren) and have read, understood, and agreed to the entire waiver document (Sections 1-8).</label>
       </div>
 
       <div class="error-msg" id="error-msg-3" style="margin-top:16px;"></div>
@@ -249,7 +303,6 @@
     <button class="btn btn-ghost" id="btn-back-2">← Back</button>
   </div>
 
-  <!-- Screen 4: Confirmed -->
   <div class="screen" id="screen-4">
     <div class="success-card">
       <div class="success-icon">🎉</div>
@@ -271,6 +324,7 @@
 </div>
 
 <script>
+  // DÁN LINK API MỚI NHẤT CỦA M VÀO ĐÂY NHÉ:
   const API_URL = "https://script.google.com/macros/s/AKfycbwd0Zs_ewx9LDmBT_WNpT4H07BODU4e7nrR0ZQJsJbLBnrwFaIrnLLDRrJ5uJl2p-MN7Q/exec";
   let selectedDate = null, selectedSlot = null;
 
@@ -302,55 +356,81 @@
     try {
       const res = await fetch(`${API_URL}?action=getSlots&date=${date}`);
       const data = await res.json();
-      renderSlots(data.slots);
+      renderSlots(data.groupedSlots); // Render cấu trúc mới từ Backend
     } catch (e) {
       container.innerHTML = '<div class="slots-loading" style="color:#B91C1C">Could not load times. Please try again.</div>';
     }
   }
 
-  function renderSlots(slots) {
+  function renderSlots(groupedSlots) {
     const container = document.getElementById('slots-container');
-    const visible = slots.filter(s => s.status !== 'past');
-    if (visible.length === 0) {
+    if (!groupedSlots || groupedSlots.length === 0) {
       container.innerHTML = '<div class="slots-loading">No more sessions available today. Please choose another date.</div>';
       return;
     }
-    const list = document.createElement('div');
-    list.className = 'slots-list';
-    slots.forEach(slot => {
-      if (slot.status === 'past') return;
-      const item = document.createElement('div');
-      item.className = `slot-item ${slot.status}`;
-      item.dataset.key = slot.key;
-
-      let badgeText = '';
-      if (slot.status === 'available') badgeText = `${slot.remaining} of ${slot.capacity} free`;
-      else if (slot.status === 'almostFull') badgeText = `Only ${slot.remaining} left!`;
-      else if (slot.status === 'full') badgeText = 'Full';
-
-      item.innerHTML = `
-        <div class="slot-dot"></div>
-        <div style="flex:1">
-          <div class="slot-time-label">${slot.start}</div>
-          <div class="slot-play-time">Session until ${slot.end}</div>
-        </div>
-        <div class="slot-badge">${badgeText}</div>
-      `;
-
-      if (slot.status !== 'full') {
-        item.addEventListener('click', () => selectSlot(slot, item));
-      }
-      list.appendChild(item);
-    });
+    
     container.innerHTML = '';
-    container.appendChild(list);
-  }
+    let hasAvailable = false;
 
-  function selectSlot(slot, el) {
-    document.querySelectorAll('.slot-item').forEach(i => i.classList.remove('selected'));
-    el.classList.add('selected');
-    selectedSlot = slot;
-    document.getElementById('btn-next-1').disabled = false;
+    groupedSlots.forEach(group => {
+      // Chỉ hiển thị giờ chẵn nếu có ít nhất 1 slot chưa qua
+      const visibleSub = group.subSlots.filter(s => s.status !== 'past');
+      if (visibleSub.length === 0) return;
+      hasAvailable = true;
+
+      const groupDiv = document.createElement('div');
+      groupDiv.className = 'hour-group';
+
+      const btn = document.createElement('button');
+      btn.className = 'hour-btn';
+      btn.textContent = group.hourLabel;
+      
+      const subContainer = document.createElement('div');
+      subContainer.className = 'sub-slots';
+
+      btn.onclick = () => {
+        btn.classList.toggle('open');
+        subContainer.style.display = subContainer.style.display === 'flex' ? 'none' : 'flex';
+      };
+
+      visibleSub.forEach(slot => {
+        const item = document.createElement('div');
+        item.className = `slot-item ${slot.status}`;
+        item.dataset.key = slot.key;
+
+        let badgeText = '';
+        if (slot.status === 'available') badgeText = `${slot.remaining} of ${slot.capacity} free`;
+        else if (slot.status === 'almostFull') badgeText = `Only ${slot.remaining} left!`;
+        else if (slot.status === 'full') badgeText = 'Full';
+
+        item.innerHTML = `
+          <div class="slot-dot"></div>
+          <div style="flex:1">
+            <div class="slot-time-label">${slot.start}</div>
+            <div class="slot-play-time">Session until ${slot.end}</div>
+          </div>
+          <div class="slot-badge">${badgeText}</div>
+        `;
+
+        if (slot.status !== 'full') {
+          item.addEventListener('click', () => {
+            document.querySelectorAll('.slot-item').forEach(i => i.classList.remove('selected'));
+            item.classList.add('selected');
+            selectedSlot = slot;
+            document.getElementById('btn-next-1').disabled = false;
+          });
+        }
+        subContainer.appendChild(item);
+      });
+
+      groupDiv.appendChild(btn);
+      groupDiv.appendChild(subContainer);
+      container.appendChild(groupDiv);
+    });
+
+    if(!hasAvailable) {
+       container.innerHTML = '<div class="slots-loading">No more sessions available today. Please choose another date.</div>';
+    }
   }
 
   // Step 1 → 2
@@ -363,7 +443,7 @@
     goToScreen(2);
   });
 
-  // Step 2 → 3
+  // Step 2 → 3 (Chuyển tiếp và tạo form Child dynamically)
   document.getElementById('btn-next-2').addEventListener('click', () => {
     const name = document.getElementById('f-name').value.trim();
     const email = document.getElementById('f-email').value.trim();
@@ -371,8 +451,17 @@
     const children = document.getElementById('f-children').value;
     const errEl = document.getElementById('error-msg-2');
     errEl.style.display = 'none';
-    if (!name || !email || !phone || !children) { errEl.textContent = 'Please fill in all fields.'; errEl.style.display = 'block'; return; }
+    
+    if (!name || !email || !phone || !children) { errEl.textContent = 'Please fill in all contact fields.'; errEl.style.display = 'block'; return; }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { errEl.textContent = 'Please enter a valid email address.'; errEl.style.display = 'block'; return; }
+    
+    // Hiển thị số lượng Child form dựa trên lựa chọn
+    const num = parseInt(children);
+    for(let i = 1; i <= 5; i++) {
+        const childGroup = document.getElementById(`child-group-${i}`);
+        if(childGroup) childGroup.style.display = i <= num ? 'block' : 'none';
+    }
+    
     goToScreen(3);
   });
 
@@ -385,15 +474,32 @@
     document.getElementById('btn-submit').disabled = !(allChecked && photoSelected);
   }
 
-  // Submit
+  // Submit Logic
   document.getElementById('btn-submit').addEventListener('click', async () => {
+    const errEl = document.getElementById('error-msg-3');
+    errEl.style.display = 'none';
+
+    // Validate Child Names
+    const num = parseInt(document.getElementById('f-children').value);
+    let childNotesArr = [];
+    for(let i=1; i<=num; i++) {
+        let cn = document.getElementById(`c-name-${i}`).value.trim();
+        let cd = document.getElementById(`c-dob-${i}`).value;
+        if(!cn || !cd) {
+            errEl.textContent = `Please fill in all Name and DOB fields for Child ${i}.`;
+            errEl.style.display = 'block';
+            return;
+        }
+        childNotesArr.push(`Child ${i}: ${cn} (DOB: ${cd})`);
+    }
+
     const name = document.getElementById('f-name').value.trim();
     const email = document.getElementById('f-email').value.trim();
     const phone = document.getElementById('f-phone').value.trim();
-    const children = document.getElementById('f-children').value;
     const photoConsent = document.querySelector('input[name="photo"]:checked')?.value || 'no';
-    const errEl = document.getElementById('error-msg-3');
-    errEl.style.display = 'none';
+    
+    // Gộp tên các bé vào chung trường Notes để đẩy lên Google Sheet
+    const compiledNotes = childNotesArr.join(" | ");
 
     const btn = document.getElementById('btn-submit');
     btn.disabled = true;
@@ -403,11 +509,14 @@
       const params = new URLSearchParams({
         action: 'createBooking', date: selectedDate, slot: selectedSlot.key,
         parentName: name, parentEmail: email, parentPhone: phone,
-        numChildren: String(parseInt(children)),
+        numChildren: String(num),
         photoConsent, waiverSigned: 'yes',
+        notes: compiledNotes
       });
+      
       const res = await fetch(`${API_URL}?${params.toString()}`);
       const data = await res.json();
+      
       if (data.success) {
         document.getElementById('booking-id').textContent = data.bookingId;
         goToScreen(4);
@@ -440,10 +549,19 @@
     selectedDate = null; selectedSlot = null;
     ['f-name','f-email','f-phone'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('f-children').value = '';
+    
+    // Clear child fields
+    for(let i=1; i<=5; i++) {
+        document.getElementById(`c-name-${i}`).value = '';
+        document.getElementById(`c-dob-${i}`).value = '';
+    }
+
     ['w1','w2','w3','w4','w5','w6','w7','w-final'].forEach(id => document.getElementById(id).checked = false);
     document.querySelectorAll('input[name="photo"]').forEach(r => r.checked = false);
+    
     document.getElementById('btn-next-1').disabled = true;
     document.getElementById('btn-submit').disabled = true;
+    
     dateInput.value = todayStr;
     loadSlots(todayStr);
     goToScreen(1);
